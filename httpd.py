@@ -140,7 +140,7 @@ def handle_request(connection):
     dir_count = 0
     if (myfile == ''):
         # myfile = 'index.html'  # Load index file as default
-        if myfile.find('.') > 0:
+        if not os.path.isdir(myfile):
             pass
         else:
             response = '<html><body bgcolor="#808080"><center><table cellspacing="0"><tr height="32"><td colspan="6" bgcolor="#202020"><center><font face="courier" size="-1" color="#ffffff">Index of /</font></center></td></tr>'
@@ -161,7 +161,7 @@ def handle_request(connection):
                     response += '<tr><td bgcolor="#ffffff"><a href="' + x + '">' + get_icon(x) + '</a></td><td bgcolor="#ffffff"><a href="' + x + '"><font face="courier" size="-1">' + x + '</a>&nbsp;&nbsp;</font></td><td bgcolor="#ffffff"><font face="courier" color="#808080" size="-1">' + pwd.getpwuid(uid)[0] + '.' + grp.getgrgid(gid)[0] + '&nbsp;&nbsp;</font></td><td bgcolor="#ffffff"><font face="courier" color="#808080" size="-1">' + dir_unix(x) + cat_unix(str(oct(status.st_mode)[-3:])) + '&nbsp;&nbsp;</font></td><td bgcolor="#ffffff"><font face="courier" size="-1">' + change_size(os.path.getsize(x)) + '&nbsp;&nbsp;</font></td><td bgcolor="#ffffff"><font face="courier" color="#808080" size="-1">' + str(time.ctime(os.path.getmtime(x))) + '</font></td></tr>'
             response += '<tr height="32"><td colspan="6" bgcolor="#202020"><center><font face="courier" color="#ffffff" size="-1">' + plural(file_count, 'file') + ', ' + plural(dir_count, 'directory') + '</font></center></td></tr></table></center></body></html>'
     else:
-        if myfile.find('.') > 0:
+        if not os.path.isdir(myfile):
             pass
         else:
             response = '<html><body bgcolor="#808080"><center><table cellspacing="0"><tr height="32"><td colspan="6" bgcolor="#202020"><center><font face="courier" size="-1" color="#ffffff">Index of /' + myfile + '</font></center></td></tr>'
