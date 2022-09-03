@@ -9,6 +9,19 @@ from datetime import date
 import time
 
 
+def plural(num, tag):
+    if tag == 'directory':
+        if num == 1:
+            return '1 directory'
+        else:
+            return str(num) + ' directories'
+    else:
+        if num == 1:
+            return '1 file'
+        else:
+            return str(num) + ' files'
+
+
 def dir_unix(path):
     if os.path.isdir(path):
         return 'd'
@@ -122,25 +135,36 @@ def handle_request(connection):
     myfile = requesting_file.split('?')[0]  # After the "?" symbol not relevent here
     myfile = myfile.lstrip('/')
     response = ''
+    bgDark = False
+    file_count = 0
+    dir_count = 0
     if (myfile == ''):
         # myfile = 'index.html'  # Load index file as default
         if myfile.find('.') > 0:
             pass
         else:
-            response = '<html><body><table>'
+            response = '<html><body bgcolor="#808080"><center><table cellspacing="0"><tr height="32"><td colspan="6" bgcolor="#202020"><center><font face="courier" size="-1" color="#ffffff">Index of /</font></center></td></tr>'
             files = os.listdir('.')
             files.sort()
             for x in files:
                 status = os.stat(x)
                 uid = status.st_uid
                 gid = status.st_gid
-                response += '<tr><td><a href="' + x + '">' + get_icon(x) + '</a></td><td><a href="' + x + '"><font face="courier">' + x + '</a>&nbsp;&nbsp;</font></td><td><font face="courier" color="#808080">' + pwd.getpwuid(uid)[0] + '.' + grp.getgrgid(gid)[0] + '&nbsp;&nbsp;</font></td><td><font face="courier" color="#808080">' + dir_unix(x) + cat_unix(str(oct(status.st_mode)[-3:])) + '&nbsp;&nbsp;</font></td><td><font face="courier">' + change_size(os.path.getsize(x)) + '&nbsp;&nbsp;</font></td><td><font face="courier" color="#808080">' + str(time.ctime(os.path.getmtime(x))) + '</font></td></tr>'
-            response += '</table></body></html>'
+                bgDark = not bgDark
+                if os.path.isdir(x):
+                    dir_count += 1
+                else:
+                    file_count += 1
+                if bgDark:
+                    response += '<tr><td bgcolor="#efefef"><a href="' + x + '">' + get_icon(x) + '</a></td><td bgcolor="#efefef"><a href="' + x + '"><font face="courier" size="-1">' + x + '</a>&nbsp;&nbsp;</font></td><td bgcolor="#efefef"><font face="courier" color="#808080" size="-1">' + pwd.getpwuid(uid)[0] + '.' + grp.getgrgid(gid)[0] + '&nbsp;&nbsp;</font></td><td bgcolor="#efefef"><font face="courier" color="#808080" size="-1">' + dir_unix(x) + cat_unix(str(oct(status.st_mode)[-3:])) + '&nbsp;&nbsp;</font></td><td bgcolor="#efefef"><font face="courier" size="-1">' + change_size(os.path.getsize(x)) + '&nbsp;&nbsp;</font></td><td bgcolor="#efefef"><font face="courier" color="#808080" size="-1">' + str(time.ctime(os.path.getmtime(x))) + '</font></td></tr>'
+                else:
+                    response += '<tr><td bgcolor="#ffffff"><a href="' + x + '">' + get_icon(x) + '</a></td><td bgcolor="#ffffff"><a href="' + x + '"><font face="courier" size="-1">' + x + '</a>&nbsp;&nbsp;</font></td><td bgcolor="#ffffff"><font face="courier" color="#808080" size="-1">' + pwd.getpwuid(uid)[0] + '.' + grp.getgrgid(gid)[0] + '&nbsp;&nbsp;</font></td><td bgcolor="#ffffff"><font face="courier" color="#808080" size="-1">' + dir_unix(x) + cat_unix(str(oct(status.st_mode)[-3:])) + '&nbsp;&nbsp;</font></td><td bgcolor="#ffffff"><font face="courier" size="-1">' + change_size(os.path.getsize(x)) + '&nbsp;&nbsp;</font></td><td bgcolor="#ffffff"><font face="courier" color="#808080" size="-1">' + str(time.ctime(os.path.getmtime(x))) + '</font></td></tr>'
+            response += '<tr height="32"><td colspan="6" bgcolor="#202020"><center><font face="courier" color="#ffffff" size="-1">' + plural(file_count, 'file') + ', ' + plural(dir_count, 'directory') + '</font></center></td></tr></table></center></body></html>'
     else:
         if myfile.find('.') > 0:
             pass
         else:
-            response = '<html><body><table>'
+            response = '<html><body bgcolor="#808080"><center><table cellspacing="0"><tr height="32"><td colspan="6" bgcolor="#202020"><center><font face="courier" size="-1" color="#ffffff">Index of /' + myfile + '</font></center></td></tr>'
             files = os.listdir(myfile)
             files.sort()
             print(myfile)
@@ -149,13 +173,21 @@ def handle_request(connection):
                 dir_link = '/'
             else:
                 dir_link = '/' + myfile[0:up_dir]
-            response += '<tr><td><a href="' + dir_link + '"><img src="/images/folder.png"></a></td><td colspan="5"><a href="' + dir_link + '">..</a></td></tr>'
+            response += '<tr><td bgcolor="#ffffff"><a href="' + dir_link + '"><img src="/images/folder.png"></a></td><td colspan="5" bgcolor="#ffffff"><a href="' + dir_link + '">..</a></td></tr>'
             for x in files:
                 status = os.stat(myfile + '/' + x)
                 uid = status.st_uid
                 gid = status.st_gid
-                response += '<tr><td><a href="/' + myfile + '/' + x + '">' + get_icon(myfile + '/' + x) + '</a></td><td><a href="/' + myfile + '/' + x + '"><font face="courier">' + x + '</a>&nbsp;&nbsp;</font></td><td><font face="courier" color="#808080">' + pwd.getpwuid(uid)[0] + '.' + grp.getgrgid(gid)[0] + '&nbsp;&nbsp;</font></td><td><font face="courier" color="#808080">' + dir_unix(myfile + '/' + x) + cat_unix(str(oct(status.st_mode)[-3:])) + '&nbsp;&nbsp;</font></td><td><font face="courier">' + change_size(os.path.getsize(myfile + '/' + x)) + '&nbsp;&nbsp;</font></td><td><font face="courier" color="#808080">' + str(time.ctime(os.path.getmtime(myfile + '/' + x))) + '</font></td></tr>'
-            response += '</table></body></html>'
+                bgDark = not bgDark
+                if os.path.isdir(myfile + '/' + x):
+                    dir_count += 1
+                else:
+                    file_count += 1
+                if bgDark:
+                    response += '<tr><td bgcolor="#efefef"><a href="/' + myfile + '/' + x + '">' + get_icon(myfile + '/' + x) + '</a></td><td bgcolor="#efefef"><a href="/' + myfile + '/' + x + '"><font face="courier" size="-1">' + x + '</a>&nbsp;&nbsp;</font></td><td bgcolor="#efefef"><font face="courier" color="#808080" size="-1">' + pwd.getpwuid(uid)[0] + '.' + grp.getgrgid(gid)[0] + '&nbsp;&nbsp;</font></td><td bgcolor="#efefef"><font face="courier" color="#808080" size="-1">' + dir_unix(myfile + '/' + x) + cat_unix(str(oct(status.st_mode)[-3:])) + '&nbsp;&nbsp;</font></td><td bgcolor="#efefef"><font face="courier" size="-1">' + change_size(os.path.getsize(myfile + '/' + x)) + '&nbsp;&nbsp;</font></td><td bgcolor="#efefef"><font face="courier" color="#808080" size="-1">' + str(time.ctime(os.path.getmtime(myfile + '/' + x))) + '</font></td></tr>'
+                else:
+                    response += '<tr><td bgcolor="#ffffff"><a href="/' + myfile + '/' + x + '">' + get_icon(myfile + '/' + x) + '</a></td><td bgcolor="#ffffff"><a href="/' + myfile + '/' + x + '"><font face="courier" size="-1">' + x + '</a>&nbsp;&nbsp;</font></td><td bgcolor="#ffffff"><font face="courier" color="#808080" size="-1">' + pwd.getpwuid(uid)[0] + '.' + grp.getgrgid(gid)[0] + '&nbsp;&nbsp;</font></td><td bgcolor="#ffffff"><font face="courier" color="#808080" size="-1">' + dir_unix(myfile + '/' + x) + cat_unix(str(oct(status.st_mode)[-3:])) + '&nbsp;&nbsp;</font></td><td bgcolor="#ffffff"><font face="courier" size="-1">' + change_size(os.path.getsize(myfile + '/' + x)) + '&nbsp;&nbsp;</font></td><td bgcolor="#ffffff"><font face="courier" color="#808080" size="-1">' + str(time.ctime(os.path.getmtime(myfile + '/' + x))) + '</font></td></tr>'
+            response += '<tr height="32"><td colspan="6" bgcolor="#202020"><center><font face="courier" color="#ffffff" size="-1">' + plural(file_count, 'file') + ', ' + plural(dir_count, 'directory') + '</font></center></td></tr></table></center></body></html>'
     try:
         if response == '':
             file = open(myfile, 'rb')  # open file , r => read , b => byte format
