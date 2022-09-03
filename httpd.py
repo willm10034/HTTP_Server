@@ -129,7 +129,14 @@ def handle_request(connection):
     string_list = request.split(' ')  # Split request from spaces
 
     method = string_list[0]
-    requesting_file = string_list[1]
+    if len(string_list) > 0:
+        try:
+            requesting_file = string_list[1]
+        except Exception as e:
+            connection.close()
+            sys.exit(0)
+    else:
+        print(string_list)
 
     print('Client request ', requesting_file)
     if method == 'POST':
@@ -289,5 +296,6 @@ if __name__ == '__main__':
 
     while True:
         connection, address = my_socket.accept()
+        print('Connection from: ' + str(address))
         p = Process(target=handle_request, args=(connection,))
         p.start()
