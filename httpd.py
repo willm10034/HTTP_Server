@@ -140,7 +140,7 @@ def handle_request(connection):
     dir_count = 0
     if (myfile == ''):
         # myfile = 'index.html'  # Load index file as default
-        if not os.path.isdir(myfile):
+        if myfile.find('.') > -1:
             pass
         else:
             response = '<html><body bgcolor="#808080"><center><table cellspacing="0"><tr height="32"><td colspan="6" bgcolor="#202020"><center><font face="courier" size="-1" color="#ffffff">Index of /</font></center></td></tr>'
