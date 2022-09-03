@@ -7,6 +7,7 @@ import random
 from multiprocessing import Process
 from datetime import date
 import time
+import subprocess as sp
 
 
 def plural(num, tag):
@@ -131,117 +132,144 @@ def handle_request(connection):
     requesting_file = string_list[1]
 
     print('Client request ', requesting_file)
-
-    myfile = requesting_file.split('?')[0]  # After the "?" symbol not relevent here
-    myfile = myfile.lstrip('/')
-    response = ''
-    bgDark = False
-    file_count = 0
-    dir_count = 0
-    if (myfile == ''):
-        # myfile = 'index.html'  # Load index file as default
-        if myfile.find('.') > -1:
-            pass
-        else:
-            response = '<html><body bgcolor="#808080"><center><table cellspacing="0"><tr height="32"><td colspan="6" bgcolor="#202020"><center><font face="courier" size="-1" color="#ffffff">Index of /</font></center></td></tr>'
-            files = os.listdir('.')
-            files.sort()
-            for x in files:
-                status = os.stat(x)
-                uid = status.st_uid
-                gid = status.st_gid
-                bgDark = not bgDark
-                if os.path.isdir(x):
-                    dir_count += 1
-                else:
-                    file_count += 1
-                if bgDark:
-                    response += '<tr><td bgcolor="#efefef"><a href="' + x + '">' + get_icon(x) + '</a></td><td bgcolor="#efefef"><a href="' + x + '"><font face="courier" size="-1">' + x + '</a>&nbsp;&nbsp;</font></td><td bgcolor="#efefef"><font face="courier" color="#808080" size="-1">' + pwd.getpwuid(uid)[0] + '.' + grp.getgrgid(gid)[0] + '&nbsp;&nbsp;</font></td><td bgcolor="#efefef"><font face="courier" color="#808080" size="-1">' + dir_unix(x) + cat_unix(str(oct(status.st_mode)[-3:])) + '&nbsp;&nbsp;</font></td><td bgcolor="#efefef"><font face="courier" size="-1">' + change_size(os.path.getsize(x)) + '&nbsp;&nbsp;</font></td><td bgcolor="#efefef"><font face="courier" color="#808080" size="-1">' + str(time.ctime(os.path.getmtime(x))) + '</font></td></tr>'
-                else:
-                    response += '<tr><td bgcolor="#ffffff"><a href="' + x + '">' + get_icon(x) + '</a></td><td bgcolor="#ffffff"><a href="' + x + '"><font face="courier" size="-1">' + x + '</a>&nbsp;&nbsp;</font></td><td bgcolor="#ffffff"><font face="courier" color="#808080" size="-1">' + pwd.getpwuid(uid)[0] + '.' + grp.getgrgid(gid)[0] + '&nbsp;&nbsp;</font></td><td bgcolor="#ffffff"><font face="courier" color="#808080" size="-1">' + dir_unix(x) + cat_unix(str(oct(status.st_mode)[-3:])) + '&nbsp;&nbsp;</font></td><td bgcolor="#ffffff"><font face="courier" size="-1">' + change_size(os.path.getsize(x)) + '&nbsp;&nbsp;</font></td><td bgcolor="#ffffff"><font face="courier" color="#808080" size="-1">' + str(time.ctime(os.path.getmtime(x))) + '</font></td></tr>'
-            response += '<tr height="32"><td colspan="6" bgcolor="#202020"><center><font face="courier" color="#ffffff" size="-1">' + plural(file_count, 'file') + ', ' + plural(dir_count, 'directory') + '</font></center></td></tr></table></center></body></html>'
-    else:
-        if not os.path.isdir(myfile):
-            pass
-        else:
-            response = '<html><body bgcolor="#808080"><center><table cellspacing="0"><tr height="32"><td colspan="6" bgcolor="#202020"><center><font face="courier" size="-1" color="#ffffff">Index of /' + myfile + '</font></center></td></tr>'
-            files = os.listdir(myfile)
-            files.sort()
-            print(myfile)
-            up_dir = myfile.rfind('/')
-            if up_dir == -1:
-                dir_link = '/'
-            else:
-                dir_link = '/' + myfile[0:up_dir]
-            response += '<tr><td bgcolor="#ffffff"><a href="' + dir_link + '"><img src="/images/folder.png"></a></td><td colspan="5" bgcolor="#ffffff"><a href="' + dir_link + '">..</a></td></tr>'
-            for x in files:
-                status = os.stat(myfile + '/' + x)
-                uid = status.st_uid
-                gid = status.st_gid
-                bgDark = not bgDark
-                if os.path.isdir(myfile + '/' + x):
-                    dir_count += 1
-                else:
-                    file_count += 1
-                if bgDark:
-                    response += '<tr><td bgcolor="#efefef"><a href="/' + myfile + '/' + x + '">' + get_icon(myfile + '/' + x) + '</a></td><td bgcolor="#efefef"><a href="/' + myfile + '/' + x + '"><font face="courier" size="-1">' + x + '</a>&nbsp;&nbsp;</font></td><td bgcolor="#efefef"><font face="courier" color="#808080" size="-1">' + pwd.getpwuid(uid)[0] + '.' + grp.getgrgid(gid)[0] + '&nbsp;&nbsp;</font></td><td bgcolor="#efefef"><font face="courier" color="#808080" size="-1">' + dir_unix(myfile + '/' + x) + cat_unix(str(oct(status.st_mode)[-3:])) + '&nbsp;&nbsp;</font></td><td bgcolor="#efefef"><font face="courier" size="-1">' + change_size(os.path.getsize(myfile + '/' + x)) + '&nbsp;&nbsp;</font></td><td bgcolor="#efefef"><font face="courier" color="#808080" size="-1">' + str(time.ctime(os.path.getmtime(myfile + '/' + x))) + '</font></td></tr>'
-                else:
-                    response += '<tr><td bgcolor="#ffffff"><a href="/' + myfile + '/' + x + '">' + get_icon(myfile + '/' + x) + '</a></td><td bgcolor="#ffffff"><a href="/' + myfile + '/' + x + '"><font face="courier" size="-1">' + x + '</a>&nbsp;&nbsp;</font></td><td bgcolor="#ffffff"><font face="courier" color="#808080" size="-1">' + pwd.getpwuid(uid)[0] + '.' + grp.getgrgid(gid)[0] + '&nbsp;&nbsp;</font></td><td bgcolor="#ffffff"><font face="courier" color="#808080" size="-1">' + dir_unix(myfile + '/' + x) + cat_unix(str(oct(status.st_mode)[-3:])) + '&nbsp;&nbsp;</font></td><td bgcolor="#ffffff"><font face="courier" size="-1">' + change_size(os.path.getsize(myfile + '/' + x)) + '&nbsp;&nbsp;</font></td><td bgcolor="#ffffff"><font face="courier" color="#808080" size="-1">' + str(time.ctime(os.path.getmtime(myfile + '/' + x))) + '</font></td></tr>'
-            response += '<tr height="32"><td colspan="6" bgcolor="#202020"><center><font face="courier" color="#ffffff" size="-1">' + plural(file_count, 'file') + ', ' + plural(dir_count, 'directory') + '</font></center></td></tr></table></center></body></html>'
-    try:
-        if response == '':
-            file = open(myfile, 'rb')  # open file , r => read , b => byte format
-            response = file.read()
-            file.close()
-
+    if method == 'POST':
+        # pass
+        # parse posted values and append to requested py file
+        myfile = requesting_file.split('?')[0]  # After the "?" symbol not relevant here
+        myfile = myfile.lstrip('/')
+        data = request.split('\n')
+        data = data[-1:]
         header = 'HTTP/1.1 200 OK\n'
+        header += 'Content-Type: text/html\n\n'
+        response = sp.getoutput('python3 ' + myfile + ' ' + str(data))
 
-        if myfile.endswith(".jpg"):
-            mimetype = 'image/jpg'
-        elif myfile.endswith('.png'):
-            mimetype = 'image/png'
-        elif myfile.endswith('.gif'):
-            mimetype = 'image/gif'
-        elif myfile.endswith(".css"):
-            mimetype = 'text/css'
-        elif myfile.endswith(".py"):
-            mimetype = 'text/plain'
-        elif myfile.endswith(".txt"):
-            mimetype = 'text/plain'
-        elif myfile.endswith(".log"):
-            mimetype = 'text/plain'
-        elif myfile.endswith(".xml"):
-            mimetype = 'application/xml'
-        elif myfile.endswith(".mp3"):
-            mimetype = 'audio/x-mp3'
-        elif myfile.endswith(".wav"):
-            mimetype = 'audio/x-wav'
-        elif myfile.endswith(".csv"):
-            mimetype = 'text/csv'
-        elif myfile.endswith(".mov"):
-            mimetype = 'video/quicktime'
-        elif myfile.endswith(".html"):
-            mimetype = 'text/html'
-        elif myfile.endswith(".htm"):
-            mimetype = 'text/html'
+        if response != '':
+            if type(response) != bytes:
+                response = response.encode('utf-8')
+        final_response = header.encode('utf-8')
+        if response != '':
+            final_response += response
+        connection.send(final_response)
+        connection.close()
+        sys.exit(0)
+    else:
+        myfile = requesting_file.split('?')[0]  # After the "?" symbol not relevant here
+        myfile = myfile.lstrip('/')
+        response = ''
+        bgDark = False
+        file_count = 0
+        dir_count = 0
+        if (myfile == ''):
+            # myfile = 'index.html'  # Load index file as default
+            if myfile.find('.') > -1:
+                pass
+            else:
+                response = '<html><body bgcolor="#808080"><center><table cellspacing="0"><tr height="32"><td colspan="6" bgcolor="#202020"><center><font face="courier" size="-1" color="#ffffff">Index of /</font></center></td></tr>'
+                files = os.listdir('.')
+                files.sort()
+                for x in files:
+                    status = os.stat(x)
+                    uid = status.st_uid
+                    gid = status.st_gid
+                    bgDark = not bgDark
+                    if os.path.isdir(x):
+                        dir_count += 1
+                    else:
+                        file_count += 1
+                    if bgDark:
+                        response += '<tr><td bgcolor="#efefef"><a href="' + x + '">' + get_icon(x) + '</a></td><td bgcolor="#efefef"><a href="' + x + '"><font face="courier" size="-1">' + x + '</a>&nbsp;&nbsp;</font></td><td bgcolor="#efefef"><font face="courier" color="#808080" size="-1">' + pwd.getpwuid(uid)[0] + '.' + grp.getgrgid(gid)[0] + '&nbsp;&nbsp;</font></td><td bgcolor="#efefef"><font face="courier" color="#808080" size="-1">' + dir_unix(x) + cat_unix(str(oct(status.st_mode)[-3:])) + '&nbsp;&nbsp;</font></td><td bgcolor="#efefef"><font face="courier" size="-1">' + change_size(os.path.getsize(x)) + '&nbsp;&nbsp;</font></td><td bgcolor="#efefef"><font face="courier" color="#808080" size="-1">' + str(time.ctime(os.path.getmtime(x))) + '</font></td></tr>'
+                    else:
+                        response += '<tr><td bgcolor="#ffffff"><a href="' + x + '">' + get_icon(x) + '</a></td><td bgcolor="#ffffff"><a href="' + x + '"><font face="courier" size="-1">' + x + '</a>&nbsp;&nbsp;</font></td><td bgcolor="#ffffff"><font face="courier" color="#808080" size="-1">' + pwd.getpwuid(uid)[0] + '.' + grp.getgrgid(gid)[0] + '&nbsp;&nbsp;</font></td><td bgcolor="#ffffff"><font face="courier" color="#808080" size="-1">' + dir_unix(x) + cat_unix(str(oct(status.st_mode)[-3:])) + '&nbsp;&nbsp;</font></td><td bgcolor="#ffffff"><font face="courier" size="-1">' + change_size(os.path.getsize(x)) + '&nbsp;&nbsp;</font></td><td bgcolor="#ffffff"><font face="courier" color="#808080" size="-1">' + str(time.ctime(os.path.getmtime(x))) + '</font></td></tr>'
+                response += '<tr height="32"><td colspan="6" bgcolor="#202020"><center><font face="courier" color="#ffffff" size="-1">' + plural(file_count, 'file') + ', ' + plural(dir_count, 'directory') + '</font></center></td></tr></table></center></body></html>'
         else:
-            mimetype = 'text/html'
+            if not os.path.isdir(myfile):
+                pass
+            else:
+                response = '<html><body bgcolor="#808080"><center><table cellspacing="0"><tr height="32"><td colspan="6" bgcolor="#202020"><center><font face="courier" size="-1" color="#ffffff">Index of /' + myfile + '</font></center></td></tr>'
+                files = os.listdir(myfile)
+                files.sort()
+                print(myfile)
+                up_dir = myfile.rfind('/')
+                if up_dir == -1:
+                    dir_link = '/'
+                else:
+                    dir_link = '/' + myfile[0:up_dir]
+                response += '<tr><td bgcolor="#ffffff"><a href="' + dir_link + '"><img src="/images/folder.png"></a></td><td colspan="5" bgcolor="#ffffff"><a href="' + dir_link + '">..</a></td></tr>'
+                for x in files:
+                    status = os.stat(myfile + '/' + x)
+                    uid = status.st_uid
+                    gid = status.st_gid
+                    bgDark = not bgDark
+                    if os.path.isdir(myfile + '/' + x):
+                        dir_count += 1
+                    else:
+                        file_count += 1
+                    if bgDark:
+                        response += '<tr><td bgcolor="#efefef"><a href="/' + myfile + '/' + x + '">' + get_icon(myfile + '/' + x) + '</a></td><td bgcolor="#efefef"><a href="/' + myfile + '/' + x + '"><font face="courier" size="-1">' + x + '</a>&nbsp;&nbsp;</font></td><td bgcolor="#efefef"><font face="courier" color="#808080" size="-1">' + pwd.getpwuid(uid)[0] + '.' + grp.getgrgid(gid)[0] + '&nbsp;&nbsp;</font></td><td bgcolor="#efefef"><font face="courier" color="#808080" size="-1">' + dir_unix(myfile + '/' + x) + cat_unix(str(oct(status.st_mode)[-3:])) + '&nbsp;&nbsp;</font></td><td bgcolor="#efefef"><font face="courier" size="-1">' + change_size(os.path.getsize(myfile + '/' + x)) + '&nbsp;&nbsp;</font></td><td bgcolor="#efefef"><font face="courier" color="#808080" size="-1">' + str(time.ctime(os.path.getmtime(myfile + '/' + x))) + '</font></td></tr>'
+                    else:
+                        response += '<tr><td bgcolor="#ffffff"><a href="/' + myfile + '/' + x + '">' + get_icon(myfile + '/' + x) + '</a></td><td bgcolor="#ffffff"><a href="/' + myfile + '/' + x + '"><font face="courier" size="-1">' + x + '</a>&nbsp;&nbsp;</font></td><td bgcolor="#ffffff"><font face="courier" color="#808080" size="-1">' + pwd.getpwuid(uid)[0] + '.' + grp.getgrgid(gid)[0] + '&nbsp;&nbsp;</font></td><td bgcolor="#ffffff"><font face="courier" color="#808080" size="-1">' + dir_unix(myfile + '/' + x) + cat_unix(str(oct(status.st_mode)[-3:])) + '&nbsp;&nbsp;</font></td><td bgcolor="#ffffff"><font face="courier" size="-1">' + change_size(os.path.getsize(myfile + '/' + x)) + '&nbsp;&nbsp;</font></td><td bgcolor="#ffffff"><font face="courier" color="#808080" size="-1">' + str(time.ctime(os.path.getmtime(myfile + '/' + x))) + '</font></td></tr>'
+                response += '<tr height="32"><td colspan="6" bgcolor="#202020"><center><font face="courier" color="#ffffff" size="-1">' + plural(file_count, 'file') + ', ' + plural(dir_count, 'directory') + '</font></center></td></tr></table></center></body></html>'
+        try:
+            if response == '':
+                file = open(myfile, 'rb')  # open file , r => read , b => byte format
+                response = file.read()
+                file.close()
 
-        header += 'Content-Type: ' + str(mimetype) + '\n\n'
+            header = 'HTTP/1.1 200 OK\n'
 
-    except Exception as e:
-        header = 'HTTP/1.1 404 Not Found\n\n'
-        response = '<html><body><center><h3>Error 404<br>not found</h3></center></body></html>'
+            if myfile.endswith(".jpg"):
+                mimetype = 'image/jpg'
+            elif myfile.endswith('.png'):
+                mimetype = 'image/png'
+            elif myfile.endswith('.gif'):
+                mimetype = 'image/gif'
+            elif myfile.endswith(".css"):
+                mimetype = 'text/css'
+            elif myfile.endswith(".py"):
+                mimetype = 'text/plain'
+            elif myfile.endswith(".txt"):
+                mimetype = 'text/plain'
+            elif myfile.endswith(".log"):
+                mimetype = 'text/plain'
+            elif myfile.endswith(".xml"):
+                mimetype = 'application/xml'
+            elif myfile.endswith(".mp3"):
+                mimetype = 'audio/x-mp3'
+            elif myfile.endswith(".wav"):
+                mimetype = 'audio/x-wav'
+            elif myfile.endswith(".csv"):
+                mimetype = 'text/csv'
+            elif myfile.endswith(".mov"):
+                mimetype = 'video/quicktime'
+            elif myfile.endswith(".html"):
+                mimetype = 'text/html'
+            elif myfile.endswith(".htm"):
+                mimetype = 'text/html'
+            else:
+                mimetype = 'text/html'
 
-    if response != '':
-        if type(response) != bytes:
-            response = response.encode('utf-8')
-    final_response = header.encode('utf-8')
-    if response != '':
-        final_response += response
-    connection.send(final_response)
-    connection.close()
-    sys.exit(0)
+            if response != '':
+                if type(response) != bytes:
+                    response = response.encode('utf-8')
+
+            header += 'Content-Type: ' + str(mimetype) + '\n'
+            header += 'Content-Length: ' + str(len(response)) + '\n\n'
+
+        except Exception as e:
+            header = 'HTTP/1.1 404 Not Found\n\n'
+            response = '<html><body bgcolor="#808080"><center><table cellspacing="0"><tr height="32"><td bgcolor="#202020"><center><font face="courier" size="-1" color="#ffffff">Not found: ' + myfile + '</font></center></td></tr>'
+            response += '<tr><td bgcolor="#ffffff"><center><img src="/images/404.png"></center></td></tr>'
+            response += '<tr height="32"><td colspan="6" bgcolor="#202020"><center><font face="courier" color="#ffffff" size="-1">&nbsp;</font></center></td></tr></table></center></body></html>'
+
+        if response != '':
+            if type(response) != bytes:
+                response = response.encode('utf-8')
+        final_response = header.encode('utf-8')
+        if response != '':
+            final_response += response
+        connection.send(final_response)
+        connection.close()
+        sys.exit(0)
 
 
 if __name__ == '__main__':
