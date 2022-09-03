@@ -290,7 +290,7 @@ if __name__ == '__main__':
     my_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     my_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     my_socket.bind((HOST, PORT))
-    my_socket.listen(1)
+    my_socket.listen(6)
 
     print('Serving on ' + HOST + ':', PORT)
 
