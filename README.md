@@ -1,5 +1,7 @@
 # HTTP_Server
-HTTP Server using sockets, with Multiprocessing, Logging, and directory browsing.
+HTTP Server using sockets, with multiprocessing, logging, directory browsing, and python script processing.
+
+contact.html and contact.py show how to implement html forms to python processing.
 
 Directory browsing shows Unix style file permissions, file size, last modified date.
 
