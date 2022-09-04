@@ -39,5 +39,5 @@ if __name__ == '__main__':
     response = get_template()
     response = response.replace('#header#', 'Contact')
     response = response.replace('#body#', span('<b>Information received</b><br>Name: ' + params['name'] + '<br>Email: ' + params['email'] + '<br>Subject: ' + params['subject'] + '<br>Message: ' + params['message']))
-    response = response.replace('#footer#', '&nbsp;')
+    response = response.replace('#footer#', span('<a href="/">&lt;-Back</a>'))
     print(response)
