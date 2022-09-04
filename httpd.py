@@ -134,7 +134,7 @@ def zpad(in_str, pad=2):
 def log_request(request):
     datet = date.today()
     with open('httpd_' + str(datet.year) + zpad(str(datet.month)) + zpad(str(datet.day)) + '.log', 'a') as f:
-        f.write(request)
+        f.write(request + '\n')
 
 
 def handle_request(connection):
@@ -323,5 +323,6 @@ if __name__ == '__main__':
     while True:
         connection, address = my_socket.accept()
         print('Connection from: ' + str(address))
+        log_request(str(address))
         p = Process(target=handle_request, args=(connection,))
         p.start()
