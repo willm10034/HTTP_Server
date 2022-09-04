@@ -10,6 +10,20 @@ import time
 import subprocess as sp
 
 
+def get_template():
+    with open('template.html', 'r') as file:
+        contents = file.read()
+    return contents
+
+
+def span(in_text):
+    return '<span style="font-family:courier;font-size:14px">' + in_text + '</span>'
+
+
+def grey_span(in_text):
+    return '<span style="font-family:courier;font-size:14px;color:#808080">' + in_text + '</span>'
+
+
 def plural(num, tag):
     if tag == 'directory':
         if num == 1:
@@ -171,9 +185,12 @@ def handle_request(connection):
             if myfile.find('.') > -1:
                 pass
             else:
-                response = '<html><body bgcolor="#808080"><center><table cellspacing="0"><tr height="32"><td colspan="6" bgcolor="#202020"><center><font face="courier" size="-1" color="#ffffff">Index of /</font></center></td></tr>'
+                contents = get_template()
+                contents = contents.replace('#header#', 'Index of /')
+                response = contents
                 files = os.listdir('.')
                 files.sort()
+                body = '<table cellspacing="0">'
                 for x in files:
                     status = os.stat(x)
                     uid = status.st_uid
@@ -183,16 +200,21 @@ def handle_request(connection):
                         dir_count += 1
                     else:
                         file_count += 1
+                    body += '<tr><td bgcolor="#bgDark#"><a href="' + x + '">' + get_icon(x) + '</a></td><td bgcolor="#bgDark#"><a href="' + x + '">' + span(x) + '</a>&nbsp;&nbsp;</td><td bgcolor="#bgDark#">' + grey_span(pwd.getpwuid(uid)[0] + '.' + grp.getgrgid(gid)[0]) + '&nbsp;&nbsp;</font></td><td bgcolor="#bgDark#">' + grey_span(dir_unix(x) + cat_unix(str(oct(status.st_mode)[-3:]))) + '&nbsp;&nbsp;</td><td bgcolor="#bgDark#">' + span(change_size(os.path.getsize(x))) + '&nbsp;&nbsp;</td><td bgcolor="#bgDark#">' + grey_span(str(time.ctime(os.path.getmtime(x)))) + '</td></tr>'
                     if bgDark:
-                        response += '<tr><td bgcolor="#efefef"><a href="' + x + '">' + get_icon(x) + '</a></td><td bgcolor="#efefef"><a href="' + x + '"><font face="courier" size="-1">' + x + '</a>&nbsp;&nbsp;</font></td><td bgcolor="#efefef"><font face="courier" color="#808080" size="-1">' + pwd.getpwuid(uid)[0] + '.' + grp.getgrgid(gid)[0] + '&nbsp;&nbsp;</font></td><td bgcolor="#efefef"><font face="courier" color="#808080" size="-1">' + dir_unix(x) + cat_unix(str(oct(status.st_mode)[-3:])) + '&nbsp;&nbsp;</font></td><td bgcolor="#efefef"><font face="courier" size="-1">' + change_size(os.path.getsize(x)) + '&nbsp;&nbsp;</font></td><td bgcolor="#efefef"><font face="courier" color="#808080" size="-1">' + str(time.ctime(os.path.getmtime(x))) + '</font></td></tr>'
+                        body = body.replace('#bgDark#', '#efefef')
                     else:
-                        response += '<tr><td bgcolor="#ffffff"><a href="' + x + '">' + get_icon(x) + '</a></td><td bgcolor="#ffffff"><a href="' + x + '"><font face="courier" size="-1">' + x + '</a>&nbsp;&nbsp;</font></td><td bgcolor="#ffffff"><font face="courier" color="#808080" size="-1">' + pwd.getpwuid(uid)[0] + '.' + grp.getgrgid(gid)[0] + '&nbsp;&nbsp;</font></td><td bgcolor="#ffffff"><font face="courier" color="#808080" size="-1">' + dir_unix(x) + cat_unix(str(oct(status.st_mode)[-3:])) + '&nbsp;&nbsp;</font></td><td bgcolor="#ffffff"><font face="courier" size="-1">' + change_size(os.path.getsize(x)) + '&nbsp;&nbsp;</font></td><td bgcolor="#ffffff"><font face="courier" color="#808080" size="-1">' + str(time.ctime(os.path.getmtime(x))) + '</font></td></tr>'
-                response += '<tr height="32"><td colspan="6" bgcolor="#202020"><center><font face="courier" color="#ffffff" size="-1">' + plural(file_count, 'file') + ', ' + plural(dir_count, 'directory') + '</font></center></td></tr></table></center></body></html>'
+                        body = body.replace('#bgDark#', '#ffffff')
+                body += '</table>'
+                response = response.replace('#body#', body)
+                response = response.replace('#footer#', plural(file_count, 'file') + ', ' + plural(dir_count, 'directory'))
         else:
             if not os.path.isdir(myfile):
                 pass
             else:
-                response = '<html><body bgcolor="#808080"><center><table cellspacing="0"><tr height="32"><td colspan="6" bgcolor="#202020"><center><font face="courier" size="-1" color="#ffffff">Index of /' + myfile + '</font></center></td></tr>'
+                contents = get_template()
+                contents = contents.replace('#header#', 'Index of /' + myfile)
+                response = contents
                 files = os.listdir(myfile)
                 files.sort()
                 print(myfile)
@@ -201,7 +223,8 @@ def handle_request(connection):
                     dir_link = '/'
                 else:
                     dir_link = '/' + myfile[0:up_dir]
-                response += '<tr><td bgcolor="#ffffff"><a href="' + dir_link + '"><img src="/images/folder.png"></a></td><td colspan="5" bgcolor="#ffffff"><a href="' + dir_link + '">..</a></td></tr>'
+                response = response.replace('#body#', '<table><tr><td bgcolor="#ffffff"><a href="' + dir_link + '"><img src="/images/folder.png"></a></td><td colspan="5" bgcolor="#ffffff"><a href="' + dir_link + '">..</a></td></tr></table>#body#')
+                body = '<table cellspacing="0">'
                 for x in files:
                     status = os.stat(myfile + '/' + x)
                     uid = status.st_uid
@@ -211,11 +234,14 @@ def handle_request(connection):
                         dir_count += 1
                     else:
                         file_count += 1
+                    body += '<tr><td bgcolor="#bgDark#"><a href="' + myfile + '/' + x + '">' + get_icon(myfile + '/' + x) + '</a></td><td bgcolor="#bgDark#"><a href="' + x + '">' + span(x) + '</a>&nbsp;&nbsp;</td><td bgcolor="#bgDark#">' + grey_span(pwd.getpwuid(uid)[0] + '.' + grp.getgrgid(gid)[0]) + '&nbsp;&nbsp;</font></td><td bgcolor="#bgDark#">' + grey_span(dir_unix(myfile + '/' + x) + cat_unix(str(oct(status.st_mode)[-3:]))) + '&nbsp;&nbsp;</td><td bgcolor="#bgDark#">' + span(change_size(os.path.getsize(myfile + '/' + x))) + '&nbsp;&nbsp;</td><td bgcolor="#bgDark#">' + grey_span(str(time.ctime(os.path.getmtime(myfile + '/' + x)))) + '</td></tr>'
                     if bgDark:
-                        response += '<tr><td bgcolor="#efefef"><a href="/' + myfile + '/' + x + '">' + get_icon(myfile + '/' + x) + '</a></td><td bgcolor="#efefef"><a href="/' + myfile + '/' + x + '"><font face="courier" size="-1">' + x + '</a>&nbsp;&nbsp;</font></td><td bgcolor="#efefef"><font face="courier" color="#808080" size="-1">' + pwd.getpwuid(uid)[0] + '.' + grp.getgrgid(gid)[0] + '&nbsp;&nbsp;</font></td><td bgcolor="#efefef"><font face="courier" color="#808080" size="-1">' + dir_unix(myfile + '/' + x) + cat_unix(str(oct(status.st_mode)[-3:])) + '&nbsp;&nbsp;</font></td><td bgcolor="#efefef"><font face="courier" size="-1">' + change_size(os.path.getsize(myfile + '/' + x)) + '&nbsp;&nbsp;</font></td><td bgcolor="#efefef"><font face="courier" color="#808080" size="-1">' + str(time.ctime(os.path.getmtime(myfile + '/' + x))) + '</font></td></tr>'
+                        body = body.replace('#bgDark#', '#efefef')
                     else:
-                        response += '<tr><td bgcolor="#ffffff"><a href="/' + myfile + '/' + x + '">' + get_icon(myfile + '/' + x) + '</a></td><td bgcolor="#ffffff"><a href="/' + myfile + '/' + x + '"><font face="courier" size="-1">' + x + '</a>&nbsp;&nbsp;</font></td><td bgcolor="#ffffff"><font face="courier" color="#808080" size="-1">' + pwd.getpwuid(uid)[0] + '.' + grp.getgrgid(gid)[0] + '&nbsp;&nbsp;</font></td><td bgcolor="#ffffff"><font face="courier" color="#808080" size="-1">' + dir_unix(myfile + '/' + x) + cat_unix(str(oct(status.st_mode)[-3:])) + '&nbsp;&nbsp;</font></td><td bgcolor="#ffffff"><font face="courier" size="-1">' + change_size(os.path.getsize(myfile + '/' + x)) + '&nbsp;&nbsp;</font></td><td bgcolor="#ffffff"><font face="courier" color="#808080" size="-1">' + str(time.ctime(os.path.getmtime(myfile + '/' + x))) + '</font></td></tr>'
-                response += '<tr height="32"><td colspan="6" bgcolor="#202020"><center><font face="courier" color="#ffffff" size="-1">' + plural(file_count, 'file') + ', ' + plural(dir_count, 'directory') + '</font></center></td></tr></table></center></body></html>'
+                        body = body.replace('#bgDark#', '#ffffff')
+                body += '</table>'
+                response = response.replace('#body#', body)
+                response = response.replace('#footer#', plural(file_count, 'file') + ', ' + plural(dir_count, 'directory'))
         try:
             if response == '':
                 file = open(myfile, 'rb')  # open file , r => read , b => byte format
