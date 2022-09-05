@@ -166,9 +166,19 @@ def handle_request(connection):
         myfile = myfile.lstrip('/')
         data = request.split('\n')
         data = data[-1:]
-        header = 'HTTP/1.1 200 OK\n'
-        header += 'Content-Type: text/html\n\n'
-        response = sp.getoutput('python3 ' + myfile + ' ' + str(data))
+        if os.path.exists(myfile):
+            log_request('Executing: python3 ' + myfile + ' ' + str(data))
+            header = 'HTTP/1.1 200 OK\n'
+            header += 'Content-Type: text/html\n\n'
+            response = sp.getoutput('python3 ' + myfile + ' ' + str(data))
+        else:
+            log_request('Sending 404: ' + myfile)
+            header = 'HTTP/1.1 404 Not Found\n\n'
+            response = '<html><body bgcolor="#808080"><center><table cellspacing="0">'
+            response += '<tr height="32"><td bgcolor="#202020"><center>' + white_span('Not found: ' + myfile) + '</center></td></tr>'
+            response += '<tr><td bgcolor="#ffffff"><center><img src="/images/404.png"></center></td></tr>'
+            response += '<tr height="32"><td colspan="6" bgcolor="#202020"><center>' + white_span('&nbsp;') + '</center></td></tr>'
+            response += '</table></center></body></html>'
 
         if response != '':
             if type(response) != bytes:
