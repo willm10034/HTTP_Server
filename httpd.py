@@ -24,6 +24,10 @@ def grey_span(in_text):
     return '<span style="font-family:courier;font-size:14px;color:#808080">' + in_text + '</span>'
 
 
+def white_span(in_text):
+    return '<span style="font-family:courier;font-size:14px;color:#ffffff">' + in_text + '</span>'
+
+
 def plural(num, tag):
     if tag == 'directory':
         if num == 1:
@@ -200,7 +204,12 @@ def handle_request(connection):
                         dir_count += 1
                     else:
                         file_count += 1
-                    body += '<tr><td bgcolor="#bgDark#"><a href="' + x + '">' + get_icon(x) + '</a></td><td bgcolor="#bgDark#"><a href="' + x + '">' + span(x) + '</a>&nbsp;&nbsp;</td><td bgcolor="#bgDark#">' + grey_span(pwd.getpwuid(uid)[0] + '.' + grp.getgrgid(gid)[0]) + '&nbsp;&nbsp;</font></td><td bgcolor="#bgDark#">' + grey_span(dir_unix(x) + cat_unix(str(oct(status.st_mode)[-3:]))) + '&nbsp;&nbsp;</td><td bgcolor="#bgDark#">' + span(change_size(os.path.getsize(x))) + '&nbsp;&nbsp;</td><td bgcolor="#bgDark#">' + grey_span(str(time.ctime(os.path.getmtime(x)))) + '</td></tr>'
+                    body += '<tr><td bgcolor="#bgDark#"><a href="' + x + '">' + get_icon(x) + '</a></td>'
+                    body += '<td bgcolor="#bgDark#"><a href="' + x + '">' + span(x) + '</a>&nbsp;&nbsp;</td>'
+                    body += '<td bgcolor="#bgDark#">' + grey_span(pwd.getpwuid(uid)[0] + '.' + grp.getgrgid(gid)[0]) + '&nbsp;&nbsp;</font></td>'
+                    body += '<td bgcolor="#bgDark#">' + grey_span(dir_unix(x) + cat_unix(str(oct(status.st_mode)[-3:]))) + '&nbsp;&nbsp;</td>'
+                    body += '<td bgcolor="#bgDark#">' + span(change_size(os.path.getsize(x))) + '&nbsp;&nbsp;</td>'
+                    body += '<td bgcolor="#bgDark#">' + grey_span(str(time.ctime(os.path.getmtime(x)))) + '</td></tr>'
                     if bgDark:
                         body = body.replace('#bgDark#', '#efefef')
                     else:
@@ -223,7 +232,9 @@ def handle_request(connection):
                     dir_link = '/'
                 else:
                     dir_link = '/' + myfile[0:up_dir]
-                response = response.replace('#body#', '<table><tr><td bgcolor="#ffffff"><a href="' + dir_link + '"><img src="/images/folder.png"></a></td><td colspan="5" bgcolor="#ffffff"><a href="' + dir_link + '">..</a></td></tr></table>#body#')
+                body = '<table><tr><td bgcolor="#ffffff"><a href="' + dir_link + '"><img src="/images/folder.png"></a></td>'
+                body += '<td colspan="5" bgcolor="#ffffff"><a href="' + dir_link + '">..</a></td></tr></table>#body#'
+                response = response.replace('#body#', body)
                 body = '<table cellspacing="0">'
                 for x in files:
                     status = os.stat(myfile + '/' + x)
@@ -234,7 +245,12 @@ def handle_request(connection):
                         dir_count += 1
                     else:
                         file_count += 1
-                    body += '<tr><td bgcolor="#bgDark#"><a href="' + myfile + '/' + x + '">' + get_icon(myfile + '/' + x) + '</a></td><td bgcolor="#bgDark#"><a href="' + x + '">' + span(x) + '</a>&nbsp;&nbsp;</td><td bgcolor="#bgDark#">' + grey_span(pwd.getpwuid(uid)[0] + '.' + grp.getgrgid(gid)[0]) + '&nbsp;&nbsp;</font></td><td bgcolor="#bgDark#">' + grey_span(dir_unix(myfile + '/' + x) + cat_unix(str(oct(status.st_mode)[-3:]))) + '&nbsp;&nbsp;</td><td bgcolor="#bgDark#">' + span(change_size(os.path.getsize(myfile + '/' + x))) + '&nbsp;&nbsp;</td><td bgcolor="#bgDark#">' + grey_span(str(time.ctime(os.path.getmtime(myfile + '/' + x)))) + '</td></tr>'
+                    body += '<tr><td bgcolor="#bgDark#"><a href="' + myfile + '/' + x + '">' + get_icon(myfile + '/' + x) + '</a></td>'
+                    body += '<td bgcolor="#bgDark#"><a href="' + x + '">' + span(x) + '</a>&nbsp;&nbsp;</td>'
+                    body += '<td bgcolor="#bgDark#">' + grey_span(pwd.getpwuid(uid)[0] + '.' + grp.getgrgid(gid)[0]) + '&nbsp;&nbsp;</font></td>'
+                    body += '<td bgcolor="#bgDark#">' + grey_span(dir_unix(myfile + '/' + x) + cat_unix(str(oct(status.st_mode)[-3:]))) + '&nbsp;&nbsp;</td>'
+                    body += '<td bgcolor="#bgDark#">' + span(change_size(os.path.getsize(myfile + '/' + x))) + '&nbsp;&nbsp;</td>'
+                    body += '<td bgcolor="#bgDark#">' + grey_span(str(time.ctime(os.path.getmtime(myfile + '/' + x)))) + '</td></tr>'
                     if bgDark:
                         body = body.replace('#bgDark#', '#efefef')
                     else:
@@ -290,9 +306,11 @@ def handle_request(connection):
 
         except Exception as e:
             header = 'HTTP/1.1 404 Not Found\n\n'
-            response = '<html><body bgcolor="#808080"><center><table cellspacing="0"><tr height="32"><td bgcolor="#202020"><center><font face="courier" size="-1" color="#ffffff">Not found: ' + myfile + '</font></center></td></tr>'
+            response = '<html><body bgcolor="#808080"><center><table cellspacing="0">'
+            response += '<tr height="32"><td bgcolor="#202020"><center>' + white_span('Not found: ' + myfile) + '</center></td></tr>'
             response += '<tr><td bgcolor="#ffffff"><center><img src="/images/404.png"></center></td></tr>'
-            response += '<tr height="32"><td colspan="6" bgcolor="#202020"><center><font face="courier" color="#ffffff" size="-1">&nbsp;</font></center></td></tr></table></center></body></html>'
+            response += '<tr height="32"><td colspan="6" bgcolor="#202020"><center>' + white_span('&nbsp;') + '</center></td></tr>'
+            response += '</table></center></body></html>'
 
         if response != '':
             if type(response) != bytes:
