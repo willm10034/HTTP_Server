@@ -1,3 +1,4 @@
+import datetime
 import socket
 import os
 import grp
@@ -138,6 +139,7 @@ def zpad(in_str, pad=2):
 def log_request(request):
     datet = date.today()
     with open('httpd_' + str(datet.year) + zpad(str(datet.month)) + zpad(str(datet.day)) + '.log', 'a') as f:
+        f.write('[' + str(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')) + ']\n')
         f.write(request + '\n')
 
 
@@ -246,7 +248,7 @@ def handle_request(connection):
                     else:
                         file_count += 1
                     body += '<tr><td bgcolor="#bgDark#"><a href="' + myfile + '/' + x + '">' + get_icon(myfile + '/' + x) + '</a></td>'
-                    body += '<td bgcolor="#bgDark#"><a href="' + x + '">' + span(x) + '</a>&nbsp;&nbsp;</td>'
+                    body += '<td bgcolor="#bgDark#"><a href="' + myfile + '/' + x + '">' + span(x) + '</a>&nbsp;&nbsp;</td>'
                     body += '<td bgcolor="#bgDark#">' + grey_span(pwd.getpwuid(uid)[0] + '.' + grp.getgrgid(gid)[0]) + '&nbsp;&nbsp;</font></td>'
                     body += '<td bgcolor="#bgDark#">' + grey_span(dir_unix(myfile + '/' + x) + cat_unix(str(oct(status.st_mode)[-3:]))) + '&nbsp;&nbsp;</td>'
                     body += '<td bgcolor="#bgDark#">' + span(change_size(os.path.getsize(myfile + '/' + x))) + '&nbsp;&nbsp;</td>'
@@ -305,6 +307,7 @@ def handle_request(connection):
             header += 'Content-Length: ' + str(len(response)) + '\n\n'
 
         except Exception as e:
+            log_request('Sending 404: ' + myfile)
             header = 'HTTP/1.1 404 Not Found\n\n'
             response = '<html><body bgcolor="#808080"><center><table cellspacing="0">'
             response += '<tr height="32"><td bgcolor="#202020"><center>' + white_span('Not found: ' + myfile) + '</center></td></tr>'
@@ -323,24 +326,40 @@ def handle_request(connection):
         sys.exit(0)
 
 
+def listen():
+    while True:
+        connection, address = my_socket.accept()
+        print('Connection from: ' + str(address))
+        log_request('Connection from: ' + str(address))
+        p = Process(target=handle_request, args=(connection,))
+        p.start()
+
+
 if __name__ == '__main__':
     my_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     my_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     my_socket.connect(('8.8.8.8', 53))
     HOST = my_socket.getsockname()[0]
     PORT = 8000
-    my_socket.close()
-    my_socket = None
-    my_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    my_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    my_socket.bind((HOST, PORT))
-    my_socket.listen(6)
+    # my_socket.close()
+    # my_socket = None
+    # my_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    # my_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    # my_socket.bind((HOST, PORT))
+    # my_socket.listen(6)
 
     print('Serving on ' + HOST + ':', PORT)
 
     while True:
-        connection, address = my_socket.accept()
-        print('Connection from: ' + str(address))
-        log_request(str(address))
-        p = Process(target=handle_request, args=(connection,))
-        p.start()
+        print('Starting listen...')
+        my_socket.close()
+        my_socket = None
+        my_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        my_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        my_socket.bind((HOST, PORT))
+        my_socket.listen(6)
+        q = Process(target=listen())
+        q.start()
+        time.sleep(10)
+        q.close()
+        time.sleep(1)
